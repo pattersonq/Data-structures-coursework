@@ -1,0 +1,15 @@
+drop table habitacion;
+drop table jugador;
+
+create table JUGADOR( jugadoriid serial primary key, nombre char(20));
+
+create table HABITACION(habitacionid serial primary key, capacidad int);
+
+insert into JUGADOR values(default, 'Luis');
+
+create table PARTIDA(partidaid serial primary key,
+			comienzo timestamp,
+			final timestamp,
+			blancas int references, JUGADOR(jugador1),
+			negras int references JUGADOR(jugadorid),
+			habitacion int references HABITACION(jugadorid),

@@ -1,0 +1,26 @@
+DROP VIEW IF EXISTS num_pelis;
+
+CREATE VIEW num_pelis
+AS
+  (SELECT language_id,
+          Sum(suma2) suma3
+   FROM   (SELECT Sum(suma1) suma2,
+                  film_id
+           FROM   (SELECT COUNT(rental_id) suma1,
+                          inventory.inventory_id,
+                          film_id
+                   FROM   rental,
+                          inventory
+                   WHERE  rental.inventory_id = inventory.inventory_id
+                   GROUP  BY inventory.inventory_id
+                   ORDER  BY film_id) T
+           GROUP  BY film_id
+           ORDER  BY film_id) Q
+          natural JOIN film
+   GROUP  BY language_id);
+
+SELECT LANGUAGE.name
+FROM   LANGUAGE
+       natural JOIN num_pelis
+WHERE  suma3 = (SELECT Max(suma3)
+                FROM   num_pelis); 

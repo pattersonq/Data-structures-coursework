@@ -1,0 +1,50 @@
+DROP VIEW IF EXISTS rents;
+
+CREATE VIEW rents
+AS
+  (SELECT COUNT(*) peliculas,
+          customer.customer_id
+   FROM   customer,
+          rental
+   WHERE  customer.customer_id = rental.customer_id
+   GROUP  BY customer.customer_id);
+
+DROP VIEW IF EXISTS info_cat;
+
+CREATE VIEW info_cat
+AS
+  (SELECT COUNT(t.film_id) suma_category,
+          category_id
+   FROM   (SELECT COUNT(rental_id) suma_alquiler,
+                  inventory.inventory_id,
+                  film_id
+           FROM   rental,
+                  inventory
+           WHERE  rental.inventory_id = inventory.inventory_id
+                  AND rental.customer_id = (SELECT customer.customer_id
+                                            FROM   rents
+                                                   natural JOIN customer
+                                            WHERE  peliculas = (SELECT Max(
+                                                               peliculas)
+                                                                FROM   rents))
+           GROUP  BY inventory.inventory_id
+           ORDER  BY film_id) T
+          natural JOIN film_category,
+          inventory,
+          rental
+   WHERE  T.film_id = inventory.film_id
+          AND inventory.inventory_id = rental.inventory_id
+          AND rental.customer_id = (SELECT customer.customer_id
+                                    FROM   rents
+                                           natural JOIN customer
+                                    WHERE  peliculas = (SELECT Max(peliculas)
+                                                        FROM   rents))
+   GROUP  BY category_id
+   ORDER  BY category_id);
+
+SELECT category_id,
+       category.name
+FROM   info_cat
+       natural JOIN category
+WHERE  suma_category = (SELECT Max(suma_category)
+                        FROM   info_cat);  
